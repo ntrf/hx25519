@@ -1,0 +1,4 @@
+-cp .
+# -js build.js
+-cpp build.cpp
+-main tests.TestCurve
