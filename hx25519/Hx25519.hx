@@ -54,7 +54,6 @@ abstract Vec(haxe.ds.Vector< Int32 >)
 	// Functions bellow assume `this` will store the result
 
 	//### need to unroll these loops!
-#if 1
 	public function vadd(a : Vec, b : Vec) {
 		for (i in 0 ... 32)
 			this.set(i, a.get(i) + b.get(i));
@@ -64,35 +63,8 @@ abstract Vec(haxe.ds.Vector< Int32 >)
 		for (i in 0 ... 32)
 			this.set(i, a.get(i) - b.get(i));
 	}
-#else
-	public function vadd(a : Vec, b : Vec) {
-		var v : Int32 = 0;
-		var j = 0;
-		while (j < 31) {
-			v += a.get(j) + b.get(j);
-			this.set(j, v & 255);
-			v >>>= 8;
-			j += 1;
-		}
-		v += a.getV(31) + b.getV(31);
-		setV(31, v);
-	}
 
-	public function vsub(a : Vec, b : Vec) {
-		var v : Int32 = 0x8;
-		var j = 0;
-		while (j < 31) {
-			v = (0x7F8 + v) +  a.get(j) - b.get(j);
-			this.set(j, v & 0xFF);
-			v >>= 8;
-			j += 1;
-		}
-		v += 0x7F8 + a.getV(31) - b.getV(31);
-		setV(31, v & 0xFF);
-	}
-#end
 	public function vmult(a : Vec, b : Vec) {
-#if 1
 		var v : Int32;
 		for (i in 0 ... 32) {
 			v = 0;
@@ -108,20 +80,7 @@ abstract Vec(haxe.ds.Vector< Int32 >)
 			}
 			setV(i, v);
 		}
-#else
-		var v : Int32;
-		var t = new haxe.ds.Vector< Int >(63);
-		for (i in 0 ... 63) t[i] = 0;
-		for (i in 0 ... 32) {
-			for (j in 0 ... 32) {
-				t.set(i + j, t.get(i + j) + a.get(i) * b.get(j));
-			}
-		}
 
-		for (i in 0 ... 32) {
-			this.set(i, t.get(i) + 38 * t.get(i + 16));
-		}
-#end
 		vnorm();
 		vnorm();
 	}
@@ -137,20 +96,10 @@ abstract Vec(haxe.ds.Vector< Int32 >)
 		for (j in 0 ... 31) {
 			v += 121665 * a.getV(j);
 			setV(j, v & 255);
-			v >>>= 8;
+			v >>= 8;
 		}
 		v += 121665 * a.getV(31);
 		setV(31, v & 127);
-
-		v = 19 * (v >>> 7);
-		for (j in 0 ... 31) {
-			v += getV(j);
-			setV(j, v & 255);
-			v >>>= 8;
-		}
-
-		v += getV(31);
-		setV(31, v);
 #else
 		vmult(a, _a24);
 #end
@@ -162,7 +111,6 @@ abstract Vec(haxe.ds.Vector< Int32 >)
 	public function vnorm()
 	{
 		var v : Int32 = 0;
-#if 1
 		for (j in 0 ... 31) {
 			v = getV(j) + (1 << 8);
 			var c = v >> 8;
@@ -175,25 +123,6 @@ abstract Vec(haxe.ds.Vector< Int32 >)
 		var c = v >> 8;
 		setV(0, getV(0) + 38 * (c - 1));
 		setV(31, v - (c << 8));
-#else
-		for (j in 0 ... 31) {
-			v += getV(j);
-			setV(j, v & 255);
-			v >>= 8;
-		}
-		v += getV(31);
-		setV(31, v & 127);
-
-		v = 19 * (v >>> 7);
-		for (j in 0 ... 31) {
-			v += getV(j);
-			setV(j, v & 255);
-			v >>= 8;
-		}
-
-		v += getV(31);
-		setV(31, v);
-#end
 	}
 
 	public function freeze(temp: Vec) {

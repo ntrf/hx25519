@@ -33,7 +33,7 @@ class TestCurve
 
 		var index = 0;
 
-		while (true) {
+		while (index < 10) {
 
 			index++;
 
